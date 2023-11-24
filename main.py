@@ -62,6 +62,7 @@ async def start_training(message):
 @bot.message_handler()
 async def get_message(message):
     a = "', '"
+    b = ', '
 
     #проверка состояния тренировки пользователя (тренируется сейчас или нет)
     if len(db_request_fetchall("database.db", "SELECT testing FROM users WHERE user_id = ?", (message.chat.id, ))) == 0:
@@ -95,7 +96,7 @@ async def get_message(message):
                                f'Всего уникальных слов: {db_request_fetchone("database.db", "SELECT count_of_words FROM users WHERE user_id = ?", (message.chat.id,))[0]}\n'
                                f'Всего ошибок: {db_request_fetchone("database.db", "SELECT errors FROM users WHERE user_id = ?", (message.chat.id,))[0]}\n'
                                f'Правильных ответов с 1 попытки: {db_request_fetchone("database.db", "SELECT first_and_correct FROM users WHERE user_id = ?", (message.chat.id,))[0]} ({db_request_fetchone("database.db", "SELECT percent_of_first_and_correct FROM users WHERE user_id = ?", (message.chat.id,))[0]}%)\n'
-                               f'Слова, с которыми возникли трудности: {a.join(db_request_fetchone("database.db", "SELECT incorrect_words_list FROM users WHERE user_id = ?", (message.chat.id,))[0].split(a))}\n'
+                               f'Слова, с которыми возникли трудности: {b.join(db_request_fetchone("database.db", "SELECT incorrect_words_list FROM users WHERE user_id = ?", (message.chat.id,))[0].split(a))}\n'
                                '~~~~~~~~~~\n'
                                'Для нового сеанса введите /start'
                                )
@@ -174,7 +175,7 @@ async def get_message(message):
                                            f'Всего уникальных слов: {db_request_fetchone("database.db", "SELECT count_of_words FROM users WHERE user_id = ?", (message.chat.id,))[0]}\n'
                                            f'Всего ошибок: {db_request_fetchone("database.db", "SELECT errors FROM users WHERE user_id = ?", (message.chat.id,))[0]}\n'
                                            f'Правильных ответов с 1 попытки: {db_request_fetchone("database.db", "SELECT first_and_correct FROM users WHERE user_id = ?", (message.chat.id,))[0]} ({db_request_fetchone("database.db", "SELECT percent_of_first_and_correct FROM users WHERE user_id = ?", (message.chat.id,))[0]}%)\n'
-                                           f'Слова, с которыми возникли трудности: {a.join(db_request_fetchone("database.db", "SELECT incorrect_words_list FROM users WHERE user_id = ?", (message.chat.id,))[0].split(a))}\n'
+                                           f'Слова, с которыми возникли трудности: {b.join(db_request_fetchone("database.db", "SELECT incorrect_words_list FROM users WHERE user_id = ?", (message.chat.id,))[0].split(a))}\n'
                                            '~~~~~~~~~~\n'
                                            'Для нового сеанса введите /start'
                                            )
@@ -188,10 +189,10 @@ async def get_message(message):
 
                 #добавляем слово в список для неверных слов
                 if db_request_fetchone("database.db","SELECT answer FROM users WHERE user_id = ?", (message.chat.id,))[0] not in db_request_fetchone("database.db", "SELECT incorrect_words_list FROM users WHERE user_id = ?", (message.chat.id,))[0].split("', '"):
-                    db_request_fetchone("database.db", "UPDATE users SET incorrect_words_list = ?", (str(db_request_fetchone("database.db", "SELECT answer FROM users WHERE user_id = ?", (message.chat.id,))[0])+ "', '" + str(db_request_fetchone("database.db", "SELECT incorrect_words_list FROM users WHERE user_id = ?",(message.chat.id,))[0]), ))
+                    db_request_fetchone("database.db", "UPDATE users SET incorrect_words_list = ? WHERE user_id = ?", (str(db_request_fetchone("database.db", "SELECT answer FROM users WHERE user_id = ?", (message.chat.id,))[0])+ "', '" + str(db_request_fetchone("database.db", "SELECT incorrect_words_list FROM users WHERE user_id = ?",(message.chat.id,))[0]), message.chat.id))
 
                 #увеличиваем счетчик ошибок на +1
-                db_request_fetchone("database.db", "UPDATE users SET errors = errors + 1 WHERE user_id = ?", (message.ch.id,))
+                db_request_fetchone("database.db", "UPDATE users SET errors = errors + 1 WHERE user_id = ?", (message.chat.id,))
 
                 #перемешиваем список для слов
                 db_request_fetchone("database.db", "UPDATE users SET words = ? WHERE user_id = ?", (str(shuffled(db_request_fetchone("database.db", "SELECT words FROM users WHERE user_id = ?", (message.chat.id,))[0].split("', '")))[2:-2], message.chat.id))
@@ -213,11 +214,11 @@ async def get_message(message):
         if db_request_fetchone("database.db", "SELECT answer FROM users WHERE user_id = ?", (message.chat.id,))[
             0] not in db_request_fetchone("database.db", "SELECT incorrect_words_list FROM users WHERE user_id = ?",
                                           (message.chat.id,))[0].split("', '"):
-            db_request_fetchone("database.db", "UPDATE users SET incorrect_words_list = ?", (str(
+            db_request_fetchone("database.db", "UPDATE users SET incorrect_words_list = ? WHERE user_id = ?", (str(
                 db_request_fetchone("database.db", "SELECT answer FROM users WHERE user_id = ?", (message.chat.id,))[
                     0]) + "', '" + str(
                 db_request_fetchone("database.db", "SELECT incorrect_words_list FROM users WHERE user_id = ?",
-                                    (message.chat.id,))[0]),))
+                                    (message.chat.id,))[0]), message.chat.id))
 
         # увеличиваем счетчик ошибок на +1
         db_request_fetchone("database.db", "UPDATE users SET errors = errors + 1 WHERE user_id = ?", (message.ch.id,))
